@@ -1,0 +1,30 @@
+# ── DATA NEVER GOES IN GIT ────────────────────────────────────────────────
+# MIMIC's DUA forbids redistribution. This is not a style rule.
+data/
+!data/README.md
+*.csv
+*.csv.gz
+*.parquet
+
+# artifacts
+outputs/
+*.joblib
+*.pkl
+.ipynb_checkpoints/
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# os / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
