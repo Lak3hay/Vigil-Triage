@@ -43,3 +43,11 @@ Classes already paid for on other projects and most likely to recur here.
   excluding early landmarks for exactly the patients who were re-checked slowly. -> *When
   a filter fires on a large fraction, the first question is whether the data is missing or
   whether you failed to load it.*
+
+- **2026-08-26 — Built a stratified-exclusion audit that divided landmark counts by stay
+  counts.** Landmark filters record `stay_id` (one stay contributes many landmarks), so the
+  numerator counted landmarks and the denominator counted stays. The output looked like a
+  percentage, sorted like a percentage, and reported 100% for a filter that had removed
+  155 landmarks from 155 stays. Caught only because the number was implausibly round. ->
+  *A rate is only meaningful when numerator and denominator count the same unit. Where ids
+  can repeat, make the function demand an explicit denominator rather than inferring one.*
