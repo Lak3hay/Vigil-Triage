@@ -27,3 +27,19 @@ Classes already paid for on other projects and most likely to recur here.
   the very claim it was illustrating. -> *When an exhibit is the evidence for a claim, check
   the exhibit against the claim literally, value by value. A number chosen for rhetorical
   effect is still a number someone will check.*
+
+- **2026-08-26 — Converted the whole MIMIC-ED temperature column from Fahrenheit when it
+  is charted in MIXED units.** 6.2% of readings were already Celsius; converting them
+  turned a normal 36.8 C into 2.7 C, which the plausibility filter then discarded as a
+  data error. The bug deleted the most *normal-looking* observations and left the range
+  looking clean, so nothing downstream would have complained. -> *Never assume a units
+  column is homogeneous. Detect per value where the plausible ranges do not overlap, and
+  look at what a filter actually removed rather than only that it removed something.*
+
+- **2026-08-26 — Nearly shipped a landmark builder that silently dropped 20% of prediction
+  moments as "no observation yet".** The triage table holds each stay's first vitals but
+  no charttime, so it never entered the vitals series; every stay's first observation was
+  therefore later than reality. The filter looked like housekeeping and was in fact
+  excluding early landmarks for exactly the patients who were re-checked slowly. -> *When
+  a filter fires on a large fraction, the first question is whether the data is missing or
+  whether you failed to load it.*

@@ -23,7 +23,7 @@
 | phase | gate | state |
 |---|---|---|
 | **0 · Foundation** | clean-checkout run, CI green | **`[x]` done 2026-08-26** |
-| **1 · Cohort & labels** | counts reconcile; zero patient overlap across splits | `[ ]` |
+| **1 · Cohort & labels** | counts reconcile; zero patient overlap across splits | `[~]` 1.3/1.4 done |
 | **2 · The floor** | B0 + NEWS2 + evaluation harness | `[ ]` |
 | **3 · The model** | M1 — does trajectory beat snapshot? | `[ ]` |
 | **4 · The question** | M2 — is functional form the constraint? | `[ ]` |
@@ -263,13 +263,27 @@ Each of these is now enforced by a test in `tests/test_schema.py`.*
    the whole project rested on and it is now checked rather than believed.
 2. **The raw table is NOT chronologically sorted.** Any code taking "the last row" as the
    latest reading is silently wrong. Sortedness is now a schema contract.
-3. **Temperature is Fahrenheit**, and the observed range includes 31.4 F — a physiologically
-   impossible value. Implausible readings are **nulled, not clipped**: an impossible reading
-   is absence of information, not extreme information.
+3. **Temperature is charted in MIXED units** — mostly Fahrenheit, but 6.2% of readings are
+   already Celsius. Converting the column wholesale turns a normal 36.8 C into 2.7 C, which
+   then reads as a data error and is discarded; the bug deletes the most normal-looking
+   observations while leaving the range looking clean. Detected per value (the plausible C
+   and F ranges do not overlap). After the fix: **0 readings nulled**, range 31.4–40.5 C,
+   median 36.7. Implausible readings are still **nulled, not clipped** — an impossible
+   reading is absence of information, not extreme information.
 4. **Missingness is large and channel-dependent** — temperature 44%, pain 29%, rhythm 97%,
    heart rate 2.9%. See §5.1.
 5. **3.5 stays per patient, one patient with 23.** Patient-level grouping is mandatory.
-6. **Dates are shifted** (2112–2201), confirming §4 rule 3.
+6. **Dates are shifted** (2112–2201), confirming §4 rule 3 — and therefore **a temporal
+   split is not constructible from the ED module alone.** `splits.py` refuses rather than
+   producing a split that looks temporal and is not.
+7. **The `triage` table is the t=0 observation and has no charttime**, so it never joins the
+   vitals series unless deliberately prepended. Adding it (timestamped at `intime`) takes the
+   "no observation yet at landmark" filter from **20.1% to 0%** and coverage from 198 to
+   **221 of 222 stays**. A filter firing that hard was not describing the data; it was
+   describing a table we had not loaded.
+8. **The last observation at a landmark is old** — median staleness 59 minutes, p90 160.
+   Staleness is carried as a feature: a value from three hours ago is not the same evidence
+   as the same value from three minutes ago.
 
 ## 9.1 ⚠️ The demo subset is not representative — never quote a number from it
 
@@ -299,8 +313,15 @@ sample.** Any prevalence, calibration or performance number computed on it is me
 
 - [ ] **1.1** Cohort definition + exclusion reporting **per outcome class** (§3.2)
 - [ ] **1.2** Label builders for the four outcomes (§3.1); ED-only fallback documented
-- [ ] **1.3** Landmark table builder — asserts no feature reads past the landmark
-- [ ] **1.4** Patient-grouped temporal splits + the zero-overlap assertion (§4)
+- [x] **1.3** Landmark table builder — leakage made structurally hard: feature code never
+      touches raw vitals, only a visible slice from `expand_visible` / `attach_last_observation`,
+      both of which assert the cutoff. Boundary convention fixed: an observation charted
+      *at* the landmark is visible. *(2026-08-26)*
+- [x] **1.4** Patient-grouped splits + the zero-overlap assertion, tested by planting a
+      violation. **`patient_temporal` refuses to run without an anchor** — MIMIC shifts
+      dates per patient, so `intime` cannot order patients and a split built on it would
+      look temporal without being temporal. `patient_random` is the documented interim.
+      *(2026-08-26)*
 - [ ] **1.5** Cohort characterisation ("Table 1") → `reports/cohort.md`
 - **Gate:** row counts reconcile against published totals; zero patient overlap asserted and
   tested. **Presentable as a complete analytics project.**
