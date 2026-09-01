@@ -51,3 +51,25 @@ Classes already paid for on other projects and most likely to recur here.
   155 landmarks from 155 stays. Caught only because the number was implausibly round. ->
   *A rate is only meaningful when numerator and denominator count the same unit. Where ids
   can repeat, make the function demand an explicit denominator rather than inferring one.*
+
+- **2026-09-02 — Detected deterioration and then handed the patient a four-hour re-check
+  clock.** The monitoring interval was derived from the early-warning score alone, but the
+  whole point of trend detection is that the *score can still be low while the trajectory is
+  the finding*. The system would have said "deteriorating - reassess within 240 minutes."
+  -> *When a module adds a new signal, check every downstream decision that was derived
+  before that signal existed. A correct detector wired into a stale policy is still a
+  wrong system.*
+
+- **2026-09-02 — Wrote an anti-starvation test asserting a property the design should not
+  have.** The test demanded that any level eventually overtake any other, including level 1.
+  The code was right and the test was wrong: a queue of minor complaints outranking a
+  cardiac arrest is not fairness. Level 1 is now an explicit separate priority class rather
+  than a point on the curve. -> *When a test fails, first ask whether the property being
+  asserted is one you actually want. A test can encode a bug as confidently as code can.*
+
+- **2026-09-02 — Nearly published an anti-starvation guarantee that was practically
+  vacuous.** Convexity does guarantee every waiting level overtakes every other eventually,
+  but for distant pairs "eventually" is 30 hours to 4.5 days - irrelevant inside a real ED
+  stay. The meaningful guarantee is adjacent-level overtaking within one shift. -> *State
+  the horizon beside any asymptotic claim. A property that is true only at a timescale
+  nobody experiences is not a feature.*
