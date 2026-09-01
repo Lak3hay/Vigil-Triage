@@ -31,6 +31,14 @@ from vigil.sim.scenarios import SCENARIOS, Scenario, T0
 #: 500/day is ~21 arrivals an hour; a 3x surge is ~63.
 NORMAL_ARRIVALS_PER_HOUR = 21
 
+#: Realistic ED case mix by triage level. The hand-written cohort is deliberately
+#: loaded with hard cases -- that is its job -- so sampling it *uniformly* would
+#: produce a waiting room far sicker than any real department, where the great
+#: majority of patients are minor. Getting this wrong does not just look odd: it
+#: makes the queue policy appear useless, because when everyone is critical there
+#: is nothing to re-order.
+CASE_MIX = {1: 0.02, 2: 0.07, 3: 0.31, 4: 0.42, 5: 0.18}
+
 
 def _jitter(value: float | None, pct: float, rng: random.Random) -> float | None:
     if value is None:
@@ -63,9 +71,17 @@ def generate_surge(
     per_hour = NORMAL_ARRIVALS_PER_HOUR * multiplier
     n = int(per_hour * hours)
 
+    # Draw by acuity band so the mix resembles a real department.
+    by_level: dict[int, list[Scenario]] = {}
+    for sc in SCENARIOS:
+        by_level.setdefault(sc.snapshot.nurse_acuity or 4, []).append(sc)
+    levels = [lv for lv in CASE_MIX if lv in by_level]
+    weights = [CASE_MIX[lv] for lv in levels]
+
     out: list[tuple[float, Scenario]] = []
     for i in range(n):
-        base = SCENARIOS[rng.randrange(len(SCENARIOS))]
+        lv = rng.choices(levels, weights=weights, k=1)[0]
+        base = rng.choice(by_level[lv])
         s = base.snapshot
         minute = round(i * (hours * 60) / n, 1)
 

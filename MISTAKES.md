@@ -83,3 +83,13 @@ Classes already paid for on other projects and most likely to recur here.
   measurement set, the comparison must be paired on the units present in both. An unpaired
   median across differing denominators is the "filter that gates its own measurement"
   failure wearing a different hat.*
+
+- **2026-09-02 — Built a demo waiting room far sicker than any real one.** The surge
+  generator sampled uniformly from the hand-written cohort, which is *deliberately* loaded
+  with hard cases — so ~60% of simulated arrivals escalated and the board filled with
+  level-1 patients. That is not just unrealistic: it makes the queue policy look useless,
+  because when everyone is critical there is nothing left to re-order. Now sampled against
+  a plausible ED case mix (2% L1 · 7% L2 · 31% L3 · 42% L4 · 18% L5). -> *A fixture built
+  to stress one component is the wrong population to sample when simulating the whole
+  system. Check the simulated distribution against the real-world one before drawing any
+  conclusion from it.*
