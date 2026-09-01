@@ -73,3 +73,13 @@ Classes already paid for on other projects and most likely to recur here.
   stay. The meaningful guarantee is adjacent-level overtaking within one shift. -> *State
   the horizon beside any asymptotic claim. A property that is true only at a timescale
   nobody experiences is not a feature.*
+
+- **2026-09-02 — Wrote a counterfactual that compared two arms on different denominators.**
+  A patient seen before their trajectory fires never deteriorates in that arm, so FIFO had
+  43 deteriorating patients and Vigil had 49 — and comparing arm-level medians silently
+  compared different populations. It would have flattered whichever arm left more sick
+  people waiting. Now paired on the 36 patients who deteriorated in *both* arms, matched by
+  id, with the arm-only counts reported. -> *When two arms can change who ends up in the
+  measurement set, the comparison must be paired on the units present in both. An unpaired
+  median across differing denominators is the "filter that gates its own measurement"
+  failure wearing a different hat.*
