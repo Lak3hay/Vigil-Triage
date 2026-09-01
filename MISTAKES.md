@@ -93,3 +93,11 @@ Classes already paid for on other projects and most likely to recur here.
   to stress one component is the wrong population to sample when simulating the whole
   system. Check the simulated distribution against the real-world one before drawing any
   conclusion from it.*
+
+- **2026-09-02 — Summarised a scheduling result with the median alone.** The counterfactual
+  reported that the median wait fell 32 minutes, which reads as "everyone waits less".
+  Re-ordering conserves total waiting time — the mean was unchanged at 99.2 vs 99.1 — so
+  the improvement was redistribution, and the 90th percentile had risen 50 minutes. The
+  summary was true and gave the wrong impression. -> *For any policy that reallocates a
+  fixed resource, report the conserved quantity and the tail beside the headline. A median
+  that improves while the mean is flat is always someone else paying.*

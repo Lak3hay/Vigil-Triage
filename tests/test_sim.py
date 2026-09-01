@@ -128,9 +128,20 @@ class TestCounterfactual:
         assert p["median_change_min"] < 0
         assert p["reached_sooner"] > p["reached_later"]
 
-    def test_the_overall_queue_is_not_made_worse(self, result):
-        """Re-ordering must not be throughput improvement in disguise."""
-        assert abs(result["delta"]["median_wait_min"]) < 15
+    def test_total_waiting_time_is_conserved(self, result):
+        """The honest constraint. Re-ordering cannot create capacity, so the
+        MEAN wait must be essentially unchanged - if it fell, the comparison is
+        measuring throughput rather than sequencing and the claim is wrong."""
+        assert abs(result["delta"]["mean_wait_min"]) < 3.0
+
+    def test_the_cost_of_the_improvement_is_reported(self, result):
+        """The median falls because waiting is redistributed, not removed.
+        Somebody waits longer, and the tail must be visible in the summary or
+        it is hidden."""
+        for arm in ("fifo", "vigil"):
+            assert result[arm]["p90_wait_min"] is not None
+            assert result[arm]["max_wait_min"] is not None
+        assert "p90_wait_min" in result["delta"]
 
     def test_the_comparison_is_paired_not_arm_level(self, result):
         """The two arms do not deteriorate the same patients, so arm-level

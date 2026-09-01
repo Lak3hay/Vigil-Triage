@@ -92,12 +92,24 @@ class ShiftResult:
             "seen": len(seen),
             "median_wait_min": _median(waits),
             "mean_wait_min": round(sum(waits) / len(waits), 1) if waits else None,
+            # Re-ordering conserves total waiting time; it can only redistribute
+            # it. So the tail must be reported beside the median, or the summary
+            # hides who pays for the improvement.
+            "p90_wait_min": _pctl(waits, 0.90),
+            "max_wait_min": round(max(waits), 1) if waits else None,
             "deteriorating_patients": len(self.deteriorating),
             "median_minutes_from_deterioration_to_being_seen": _median(det_waits),
             "worst_minutes_from_deterioration_to_being_seen": max(det_waits) if det_waits else None,
             "median_detection_lead_min": _median(leads),
             "escalations": sum(1 for o in self.outcomes if o.escalated),
         }
+
+
+def _pctl(xs: list[float], q: float) -> float | None:
+    if not xs:
+        return None
+    s = sorted(xs)
+    return round(s[min(len(s) - 1, int(q * len(s)))], 1)
 
 
 def _median(xs: list[float]) -> float | None:
@@ -255,7 +267,10 @@ def compare(
             "unchanged": len(diffs) - improved - worsened,
         },
         "delta": {
+            "mean_wait_min": _delta("mean_wait_min"),
             "median_wait_min": _delta("median_wait_min"),
+            "p90_wait_min": _delta("p90_wait_min"),
+            "max_wait_min": _delta("max_wait_min"),
             "median_minutes_from_deterioration_to_being_seen":
                 _delta("median_minutes_from_deterioration_to_being_seen"),
             "worst_minutes_from_deterioration_to_being_seen":

@@ -151,10 +151,18 @@ def show_experiment() -> None:
     print(f"  {'':<44}{'FIFO':>10}{'VIGIL':>10}")
     print("  " + "-" * (W - 2))
     print(f"  {'patients seen (capacity held constant)':<44}{f['seen']:>10}{v['seen']:>10}")
-    print(f"  {'median wait, all patients (min)':<44}{f['median_wait_min']:>10}{v['median_wait_min']:>10}")
+    print(f"  {'MEAN wait, all patients (min)':<44}{f['mean_wait_min']:>10}{v['mean_wait_min']:>10}")
+    print(f"  {'median wait (min)':<44}{f['median_wait_min']:>10}{v['median_wait_min']:>10}")
+    print(f"  {'90th percentile wait (min)':<44}{f['p90_wait_min']:>10}{v['p90_wait_min']:>10}")
     print(f"  {'median deterioration -> seen (min)':<44}"
           f"{p['median_minutes_deterioration_to_seen_fifo']:>10}"
           f"{p['median_minutes_deterioration_to_seen_vigil']:>10}")
+    print("
+  The MEAN wait is unchanged, and it has to be: re-ordering cannot create")
+    print("  capacity. Total waiting time is conserved and only REDISTRIBUTED - the")
+    print("  median falls sharply while the 90th percentile rises. Most patients wait")
+    print("  less; a minority wait longer. That is the trade, and the anti-starvation")
+    print("  property is what stops the tail growing without bound.")
     print(f"\n  Paired on the {p['n_matched']} patients who deteriorated in BOTH arms:")
     print(f"    median change      {p['median_change_min']:+} min")
     print(f"    reached sooner     {p['reached_sooner']}")
