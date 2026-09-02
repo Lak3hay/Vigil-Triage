@@ -1,7 +1,12 @@
 # ── DATA NEVER GOES IN GIT ────────────────────────────────────────────────
 # MIMIC's DUA forbids redistribution. This is not a style rule.
-data/
-!data/README.md
+#
+# ANCHORED with a leading slash. Unanchored "data/" matches at ANY depth, and
+# it silently excluded the entire src/vigil/data/ PACKAGE from the public
+# repository -- ten source files, six test modules that could not import, and a
+# README telling people to run a module that was not there.
+/data/
+!/data/README.md
 *.csv
 *.csv.gz
 *.parquet
