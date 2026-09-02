@@ -60,7 +60,7 @@ test it:
 recommended_level  <=  nurse_acuity          for every patient, always
 ```
 
-Swept over ~600 synthetic patients spanning every age band, every vital-sign extreme and every
+Swept over **12,487** synthetic patients spanning every age band, every vital-sign extreme and every
 level of data completeness ([`tests/test_safety_property.py`](tests/test_safety_property.py)).
 
 **Why that one inequality matters:** if Vigil can only ever *raise* urgency, then adding it to a
@@ -113,7 +113,7 @@ Run `python -m vigil.demo --rubric` to have the system verify these **live at ru
 | No score without a confidence indicator | `--patients` | 4 decomposed factors on every assessment; 1 abstains outright |
 | Clinician override + what is logged | `--audit` | Hash-chained log; override keeps the reasoning it overruled |
 | Age-banded, not one adult model | `--cases` | NEWS2 vs PEWS-style; the infant control must **not** escalate |
-| Escalation bias, demonstrated | `pytest` | ~600-patient sweep of the safety property |
+| Escalation bias, demonstrated | `pytest` | 12,487-patient sweep of the safety property |
 | Waiting-queue monitoring, both triggers | `--watch` | Overdue clock **and** worsening re-recorded vitals |
 | Scalability across hospitals | `--profiles` | Two site profiles, no retraining |
 | Stated regulatory jurisdiction | [`audit/log.py`](src/vigil/audit/log.py) | India — DPDP Act 2023 + ABDM |

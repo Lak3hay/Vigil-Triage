@@ -11,6 +11,7 @@ how a demo and a claim end up disagreeing in front of a jury.
 """
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -25,7 +26,34 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from vigil.clinical.redflags import PANEL                      # noqa: E402
 from vigil.sim import compare, composition, generate_surge, surge_summary  # noqa: E402
 from vigil.triage import assess                                # noqa: E402
-from vigil.sim.scenarios import by_id                          # noqa: E402
+from vigil.sim.scenarios import SCENARIOS, by_id                # noqa: E402
+
+
+def _count_tests() -> int:
+    """Ask pytest how many tests exist rather than remembering a number.
+
+    Sums the per-file counts, which is the one format that has been stable
+    across pytest versions -- the summary line's wording has not been, and a
+    silently-unmatched regex here is how the deck came to claim a test count
+    that was three commits stale.
+    """
+    import subprocess
+    root = Path(__file__).resolve().parents[1]
+    r = subprocess.run([sys.executable, "-m", "pytest", "--collect-only", "-q"],
+                       capture_output=True, text=True, cwd=str(root))
+    counts = [int(m.group(1)) for m in
+              re.finditer(r"^\S+\.py: (\d+)$", r.stdout, re.MULTILINE)]
+    total = sum(counts)
+    if not total:
+        raise RuntimeError(f"could not count tests; pytest said:\n{r.stdout[-800:]}")
+    return total
+
+
+def _count_safety_sweep() -> int:
+    """The real size of the safety-property sweep."""
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tests"))
+    from test_safety_property import _grid
+    return sum(1 for _ in _grid())
 
 TEMPLATE = Path(r"C:\Users\lakshay\Desktop\Hackathon_accenture\AIC_Talent-Brand_PPT-Template (1).pptx")
 OUT = Path(r"C:\Users\lakshay\Desktop\Hackathon_accenture\Vigil_Round2.pptx")
@@ -169,6 +197,11 @@ def table(slide, x, y, w, cols, rows, widths, head_fill=DEEP, size=10.5, rh=3400
 def build() -> Path:
     R = compare()
     P = R["paired_on_deteriorating_patients"]
+    # Counted, never typed. A deck that hardcodes a result drifts from it, and
+    # this one already shipped "-15 min" from before a fix and "214 tests" from
+    # before the last three commits.
+    N_TESTS = _count_tests()
+    N_SWEEP = _count_safety_sweep()
     F, V = R["fifo"], R["vigil"]
     comp = composition()
     surge = surge_summary(generate_surge(hours=3.0, multiplier=3.0))
@@ -320,7 +353,7 @@ def build() -> Path:
          color=RGBColor(0xC9, 0xA6, 0xF5), after=8, first=True, line=1.0)
     para(tf, "recommended_level  \u2264  nurse_acuity      for every patient, always", 15,
          bold=True, color=W, after=8, line=1.0)
-    para(tf, "Swept over ~600 synthetic patients across every age band, vital-sign extreme and "
+    para(tf, f"Swept over {N_SWEEP:,} synthetic patients across every age band, vital-sign extreme and "
              "level of data completeness. If Vigil can only ever raise urgency, then adding it to a "
              "department cannot create a new under-triage failure that did not already exist "
              "without it.", 11, color=RGBColor(0xE2, 0xC4, 0xFF), after=0, line=1.2)
@@ -676,10 +709,11 @@ def build() -> Path:
          after=0, first=True, line=1.0)
 
     y = 3120000
-    stats = [("20", "synthetic patients,\nevery required case"),
-             ("214", "tests, including a\n~600-patient safety sweep"),
-             ("12", "encoded red flags,\nreviewable in one file"),
-             ("\u221215 min", "median time to reach\na deteriorating patient")]
+    stats = [(str(len(SCENARIOS)), "synthetic patients,\nevery required case"),
+             (str(N_TESTS), f"tests, including a\n{N_SWEEP:,}-patient safety sweep"),
+             (str(len(PANEL)), "encoded red flags,\nreviewable in one file"),
+             (f"\u2212{abs(P['median_change_min']):.0f} min",
+              "median time to reach\na deteriorating patient")]
     for i, (n, lab) in enumerate(stats):
         x = L + i * (CW / 4 + 40000)
         wdt = CW / 4 - 40000

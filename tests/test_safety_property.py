@@ -80,7 +80,7 @@ class TestSafetyMonotone:
                 f"for age={s.age_years} hr={s.hr} rr={s.rr} spo2={s.spo2} sbp={s.sbp}"
             )
             n += 1
-        assert n > 500, f"sweep too small to be a demonstration (n={n})"
+        assert n > 10_000, f"sweep too small to be a demonstration (n={n})"
 
     def test_recommendation_stays_in_range(self):
         for s in _grid():
