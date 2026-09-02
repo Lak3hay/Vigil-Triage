@@ -200,7 +200,7 @@ pip install -e ".[dev]"
 
 python -m vigil.demo            # the whole thing
 python -m vigil.demo --rubric   # the brief's checklist, verified live
-pytest                          # 262 tests
+pytest                          # 307 tests
 python -m vigil.board           # regenerate docs/index.html
 ```
 
