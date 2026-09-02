@@ -101,3 +101,16 @@ Classes already paid for on other projects and most likely to recur here.
   summary was true and gave the wrong impression. -> *For any policy that reallocates a
   fixed resource, report the conserved quantity and the tail beside the headline. A median
   that improves while the mean is flat is always someone else paying.*
+
+- **2026-09-02 — Deleted slides and added new ones in the same python-pptx session, and it
+  silently clobbered a kept slide.** The deleted slide's partname (`slide3.xml`) was reused by
+  a newly added slide, so the team-details page was overwritten by a duplicate of the problem
+  slide. Nothing raised; only a `UserWarning: Duplicate name` buried in the output. Fixed by
+  saving to a temp file between the delete pass and the add pass. -> *When a library warns
+  about a duplicate resource name, treat it as an error. And verify structural edits by
+  listing what actually came out, not by trusting the operation.*
+
+- **2026-09-02 — Built content slides on a layout with a dark panel baked into it.** Every
+  content slide had a black block over the right third, invisible when inspecting the text
+  and obvious the instant it was exported to an image. -> *Render the artefact you are
+  shipping. Text extraction verifies content; only rendering verifies a document.*
