@@ -32,6 +32,16 @@ from datetime import datetime
 from enum import Enum
 
 from vigil.clinical.scores import MonitoringPlan
+from vigil.flow.mode import (
+    DEFAULT_SURGE_RULES,
+    OperatingMode,
+    SurgeRules,
+    adjust_recheck_interval,
+    adjust_target,
+    interrupts,
+    recheck_demand_per_hour,
+    should_enter_surge,
+)
 from vigil.flow.policy import HarmPolicy, RoutingDecision, route
 from vigil.flow.watch import Observation, TrendSignal, detect_trend, normal_range_flags
 from vigil.triage.confidence import ConfidenceLevel
@@ -50,6 +60,7 @@ class EventKind(str, Enum):
     OVERRIDE = "clinician_override"
     SEEN = "seen_by_clinician"
     CAPACITY = "capacity_warning"
+    MODE_CHANGE = "operating_mode_changed"
 
 
 @dataclass(frozen=True)
@@ -113,8 +124,21 @@ class WaitingPatient:
         ref = self.last_assessed_at or self.arrived_at
         return max(0.0, (now - ref).total_seconds() / 60.0)
 
-    def is_overdue(self, now: datetime) -> bool:
-        return self.minutes_since_assessment(now) >= self.assessment.monitoring.interval_minutes
+    def recheck_interval(
+        self, mode: OperatingMode = OperatingMode.NORMAL,
+        rules: SurgeRules = DEFAULT_SURGE_RULES,
+    ) -> tuple[int, str]:
+        """The interval actually in force, after any surge adjustment."""
+        return adjust_recheck_interval(
+            self.assessment.monitoring.interval_minutes,
+            level=self.effective_level, deteriorating=self.deteriorating,
+            mode=mode, rules=rules,
+        )
+
+    def is_overdue(self, now: datetime, mode: OperatingMode = OperatingMode.NORMAL,
+                   rules: SurgeRules = DEFAULT_SURGE_RULES) -> bool:
+        interval, _ = self.recheck_interval(mode, rules)
+        return self.minutes_since_assessment(now) >= interval
 
     @property
     def has_unresolved_flag(self) -> bool:
@@ -151,6 +175,24 @@ class WaitingRoom:
     #: when the schedule has become undeliverable and must be escalated as a
     #: staffing problem rather than hidden as overdue tasks.
     reassessment_capacity_per_hour: int = 12
+
+    #: Normal or surge. Changed only by :meth:`tick`, and every change is an
+    #: audited event - a department that cannot see when the assistant altered
+    #: its own behaviour cannot review it afterwards.
+    mode: OperatingMode = OperatingMode.NORMAL
+    surge_rules: SurgeRules = DEFAULT_SURGE_RULES
+    #: Events held back from interrupting under surge. Batched for the charge
+    #: nurse, never discarded - suppressing information and re-routing it are
+    #: different things, and only one of them is defensible.
+    batched: list[WatchEvent] = field(default_factory=list)
+
+    @property
+    def in_surge(self) -> bool:
+        return self.mode is OperatingMode.SURGE
+
+    def interrupting_events(self) -> list[WatchEvent]:
+        """Events that would actually interrupt a clinician in the current mode."""
+        return [e for e in self.events if interrupts(e.severity, self.mode, self.surge_rules)]
 
     # ── arrivals ──────────────────────────────────────────────────────────────
     def admit(self, snapshot: PatientSnapshot, *, now: datetime | None = None) -> WaitingPatient:
@@ -257,18 +299,24 @@ class WaitingRoom:
         new: list[WatchEvent] = []
         overdue: list[WaitingPatient] = []
 
+        new.extend(self._update_mode(now))
+
         for wp in self.waiting():
-            if wp.is_overdue(now):
+            interval, why = wp.recheck_interval(self.mode, self.surge_rules)
+            if wp.is_overdue(now, self.mode, self.surge_rules):
                 overdue.append(wp)
                 mins = wp.minutes_since_assessment(now)
                 new.append(self._emit(
                     now, EventKind.REASSESSMENT_DUE, wp.patient_id,
-                    f"re-check overdue by {mins - wp.assessment.monitoring.interval_minutes:.0f} min "
-                    f"(interval {wp.assessment.monitoring.interval_minutes} min)",
+                    f"re-check overdue by {mins - interval:.0f} min "
+                    f"(interval {interval} min)" + (f"; {why}" if why else ""),
                     severity="urgent" if wp.effective_level <= 2 else "attention",
                     action="repeat observations",
                 ))
-            breach = self.policy.minutes_to_breach(wp.effective_level, wp.waited_minutes(now))
+            target = adjust_target(self.policy.target_minutes[wp.effective_level],
+                                   level=wp.effective_level, mode=self.mode,
+                                   rules=self.surge_rules)
+            breach = round(target - wp.waited_minutes(now), 1)
             if breach < 0:
                 new.append(self._emit(
                     now, EventKind.TARGET_BREACHED, wp.patient_id,
@@ -287,6 +335,45 @@ class WaitingRoom:
                 severity="urgent", action="charge nurse: staffing escalation",
             ))
         return new
+
+    def _update_mode(self, now: datetime) -> list[WatchEvent]:
+        """Enter or leave surge, and say so out loud.
+
+        The mode change is emitted as an event rather than flipped silently,
+        because a department that cannot see when the assistant altered its own
+        behaviour cannot review whether it was right to.
+        """
+        waiting = self.waiting()
+        overdue = sum(1 for p in waiting if p.is_overdue(now, self.mode, self.surge_rules))
+        demand = recheck_demand_per_hour(
+            [p.recheck_interval(self.mode, self.surge_rules)[0] for p in waiting])
+        want = should_enter_surge(
+            waiting=len(waiting), demand_per_hour=demand,
+            capacity_per_hour=self.reassessment_capacity_per_hour,
+            mode=self.mode, rules=self.surge_rules)
+        target = OperatingMode.SURGE if want else OperatingMode.NORMAL
+        if target is self.mode:
+            return []
+
+        self.mode = target
+        if target is OperatingMode.SURGE:
+            return [self._emit(
+                now, EventKind.MODE_CHANGE, "-",
+                f"SURGE MODE: {len(waiting)} waiting; the re-check schedule demands "
+                f"{demand:.0f}/hour against a capacity of "
+                f"{self.reassessment_capacity_per_hour}/hour ({overdue} already overdue). "
+                f"Re-check schedule triaged - low-risk intervals stretched to a deliverable "
+                f"value, the sickest hold their cadence unchanged; only urgent events now "
+                f"interrupt, the rest are batched for the charge nurse",
+                severity="urgent",
+                action="charge nurse: confirm surge staffing; low-acuity targets relaxed",
+            )]
+        return [self._emit(
+            now, EventKind.MODE_CHANGE, "-",
+            f"NORMAL MODE resumed: {len(waiting)} waiting. Full re-check schedule "
+            f"and standard alerting restored",
+            severity="attention", action="none",
+        )]
 
     # ── clinician actions ─────────────────────────────────────────────────────
     def override(
@@ -343,4 +430,6 @@ class WaitingRoom:
         ev = WatchEvent(at=at, kind=kind, patient_id=pid, detail=detail,
                         severity=severity, action=action)
         self.events.append(ev)
+        if not interrupts(severity, self.mode, self.surge_rules):
+            self.batched.append(ev)
         return ev

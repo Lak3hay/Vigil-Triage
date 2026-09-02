@@ -139,3 +139,17 @@ Classes already paid for on other projects and most likely to recur here.
   package git was ignoring. Two tools agreeing because they share a blind spot is not
   confirmation. -> *When two checks depend on the same configuration, they can fail together
   silently. Verify coverage — what was actually inspected — not just the exit code.*
+
+- **2026-09-02 — Designed a surge mode that invented capacity.** The first version halved
+  high-risk re-check intervals under surge to "concentrate attention on the sickest". In a
+  room of 70 patients it raised total demand from 40 to 57 re-checks an hour against a
+  capacity of 8 — making the schedule *less* deliverable, which was the exact problem surge
+  mode existed to solve. Caught by a test asserting the demanded rate must fall, not by
+  reading the code. -> *Under scarcity you can only reallocate, never add. Any policy that
+  claims to give one group more without taking it from a named other group is arithmetic
+  that has not been done. Write the conservation check as a test before writing the policy.*
+
+- **2026-09-02 — Left the mode-change message describing behaviour that had been removed.**
+  The event still announced "high-risk intervals tightened" after the tightening was deleted,
+  so the demo contradicted itself on screen. -> *User-facing strings are part of the
+  behaviour. When the behaviour changes, grep for the words that described it.*

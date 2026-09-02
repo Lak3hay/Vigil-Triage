@@ -144,8 +144,44 @@ def show_surge() -> None:
     if cap:
         print(f"\n  CAPACITY: {cap[0].detail}")
         print(f"            action: {cap[0].action}")
-        print("  The schedule is escalated as a staffing problem rather than")
-        print("  accumulating silently as overdue tasks.")
+
+    _sub("it BEHAVES differently - it does not merely report more")
+    from datetime import timedelta as _td
+
+    from vigil.flow import OperatingMode, WaitingRoom
+    from vigil.flow.mode import DEFAULT_SURGE_RULES as RULES
+    from vigil.flow.mode import recheck_demand_per_hour
+
+    room = WaitingRoom(policy=URBAN_TRAUMA_CENTRE, reassessment_capacity_per_hour=8)
+    for minute, scen in arrivals[:70]:
+        room.admit(scen.snapshot, now=T0 + _td(minutes=minute))
+    waiting = room.waiting()
+    normal = recheck_demand_per_hour(
+        [p.recheck_interval(OperatingMode.NORMAL, RULES)[0] for p in waiting])
+    surge = recheck_demand_per_hour(
+        [p.recheck_interval(OperatingMode.SURGE, RULES)[0] for p in waiting])
+    room.tick(T0 + _td(minutes=30))
+    room.tick(T0 + _td(minutes=120))
+    change = [e for e in room.events if e.kind is EventKind.MODE_CHANGE]
+
+    if change:
+        print(f"  {change[0].detail}")
+    print(f"\n  {'':<30}{'NORMAL':>10}{'SURGE':>10}")
+    print("  " + "-" * (W - 2))
+    print(f"  {'re-checks demanded / hour':<30}{normal:>10.1f}{surge:>10.1f}")
+    print(f"  {'department capacity / hour':<30}{8:>10}{8:>10}")
+    print(f"  {'events recorded':<30}{len(room.events):>10}{len(room.events):>10}")
+    print(f"  {'events that INTERRUPT a nurse':<30}{len(room.events):>10}"
+          f"{len(room.interrupting_events()):>10}")
+    print("\n  Low-risk re-check intervals stretch to something deliverable; the sickest")
+    print("  keep their cadence EXACTLY. Surge tightens nothing - there are fewer")
+    print("  clinician-minutes under surge, not more, and an earlier version that")
+    print("  promised the sickest a faster cadence raised total demand from 40 to 57")
+    print("  per hour. Sub-threshold events are batched for the charge nurse, not")
+    print("  discarded.")
+    print(f"\n  Demand is still {surge:.0f}/hour against a capacity of 8. Surge mode does not")
+    print("  conjure staff - it stops issuing a schedule nobody can meet, and escalates")
+    print("  the remaining gap as a staffing signal.")
 
 
 # ── 5. the counterfactual ─────────────────────────────────────────────────────
