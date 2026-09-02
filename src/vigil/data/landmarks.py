@@ -71,7 +71,8 @@ def _counts_before(vitals: pd.DataFrame, landmarks: pd.DataFrame) -> np.ndarray:
     }
     out = np.zeros(len(landmarks), dtype=np.int64)
     for i, (sid, ts) in enumerate(
-        zip(landmarks["stay_id"].to_numpy(), landmarks["landmark_ts"].to_numpy())
+        zip(landmarks["stay_id"].to_numpy(), landmarks["landmark_ts"].to_numpy(),
+            strict=True)
     ):
         arr = times.get(sid)
         if arr is not None:

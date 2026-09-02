@@ -122,3 +122,20 @@ Classes already paid for on other projects and most likely to recur here.
   a string literal. -> *A green suite is evidence about what it covers, not about what ships.
   Every user-facing entry point needs a test that actually runs it — including one real
   subprocess invocation of the exact command the documentation gives people.*
+
+- **2026-09-02 — Shipped a public repository that did not work, and did not know for fifteen
+  builds.** `.gitignore` contained an unanchored `data/`, which git matches at *any* depth, so
+  the entire `src/vigil/data/` package — ten source files — was silently excluded from every
+  push. On a clean clone `python -m vigil.data.fetch_demo` (the README's own command) did not
+  exist and six test modules failed to import. CI had been red since the workflow was added,
+  but the Lint step failed first and the Test step was `skipped` every time, so the breakage
+  was never reported. -> *Ignore patterns are path patterns, not name patterns: anchor them.
+  A lint gate must never be able to skip the test gate. And the only check that catches this
+  class of bug is cloning your own published artefact into a clean environment and running the
+  instructions you wrote for other people.*
+
+- **2026-09-02 — Believed a linter that had never seen a third of the source.** ruff skips
+  gitignored files by default, so `ruff check src tests` passed locally while ignoring the same
+  package git was ignoring. Two tools agreeing because they share a blind spot is not
+  confirmation. -> *When two checks depend on the same configuration, they can fail together
+  silently. Verify coverage — what was actually inspected — not just the exit code.*
