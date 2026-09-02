@@ -114,3 +114,11 @@ Classes already paid for on other projects and most likely to recur here.
   content slide had a black block over the right third, invisible when inspecting the text
   and obvious the instant it was exported to an image. -> *Render the artefact you are
   shipping. Text extraction verifies content; only rendering verifies a document.*
+
+- **2026-09-02 — Pushed a `demo.py` with a syntax error while 214 tests passed.** `python -m
+  vigil.demo` is the FIRST command in the README, so a judge on a clean clone would have hit
+  it before anything else — and the suite said nothing, because no test imported the module.
+  The break came from a scripted edit that turned an escaped `\n` into a real newline inside
+  a string literal. -> *A green suite is evidence about what it covers, not about what ships.
+  Every user-facing entry point needs a test that actually runs it — including one real
+  subprocess invocation of the exact command the documentation gives people.*

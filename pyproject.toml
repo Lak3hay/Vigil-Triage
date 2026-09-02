@@ -25,7 +25,8 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
-markers = ["needs_data: requires the demo dataset on disk"]
+markers = ["needs_data: requires the demo dataset on disk",
+           "slow: spawns a subprocess"]
 
 [tool.ruff]
 line-length = 100

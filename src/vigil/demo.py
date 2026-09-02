@@ -157,8 +157,7 @@ def show_experiment() -> None:
     print(f"  {'median deterioration -> seen (min)':<44}"
           f"{p['median_minutes_deterioration_to_seen_fifo']:>10}"
           f"{p['median_minutes_deterioration_to_seen_vigil']:>10}")
-    print("
-  The MEAN wait is unchanged, and it has to be: re-ordering cannot create")
+    print("\n  The MEAN wait is unchanged, and it has to be: re-ordering cannot create")
     print("  capacity. Total waiting time is conserved and only REDISTRIBUTED - the")
     print("  median falls sharply while the 90th percentile rises. Most patients wait")
     print("  less; a minority wait longer. That is the trade, and the anti-starvation")
