@@ -16,13 +16,12 @@ Vigil - which is the counterfactual from ``vigil.sim.runner`` made visible.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
 
 from vigil.flow import WaitingRoom
 from vigil.flow.policy import URBAN_TRAUMA_CENTRE, HarmPolicy
-from vigil.flow.room import EventKind, WaitingPatient
+from vigil.flow.room import WaitingPatient
 from vigil.sim import SCENARIOS
 from vigil.sim.scenarios import T0, Scenario
 from vigil.triage.confidence import ConfidenceLevel
@@ -142,7 +141,7 @@ def build_payload(policy: HarmPolicy = URBAN_TRAUMA_CENTRE) -> dict:
         ranked = room.ranked(now)
         fifo = sorted(waiting, key=lambda p: (p.effective_level, p.arrived_at))
 
-        def _row(wp: WaitingPatient, cost: float) -> dict:
+        def _row(wp: WaitingPatient, cost: float, now=now) -> dict:
             return {
                 "id": wp.patient_id,
                 "immediate": wp.effective_level == 1,

@@ -163,7 +163,7 @@ def normal_range_flags(band, latest: Observation) -> dict[str, bool]:
     question against adult ranges is how a deteriorating child gets called
     stable.
     """
-    from vigil.clinical.agebands import ranges_for, vital_status
+    from vigil.clinical.agebands import vital_status
 
     flags: dict[str, bool] = {}
     for channel in ("hr", "rr", "sbp"):

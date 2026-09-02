@@ -3,8 +3,16 @@ from __future__ import annotations
 
 import pytest
 
-from vigil.sim import (SCENARIOS, by_id, compare, composition, coverage,
-                       generate_surge, run_shift, surge_summary)
+from vigil.sim import (
+    SCENARIOS,
+    by_id,
+    compare,
+    composition,
+    coverage,
+    generate_surge,
+    run_shift,
+    surge_summary,
+)
 from vigil.triage import assess
 from vigil.triage.confidence import ConfidenceLevel
 

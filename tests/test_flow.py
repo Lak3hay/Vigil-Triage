@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import pytest
 
 from vigil.flow import WaitingRoom, detect_trend, profile, route
-from vigil.flow.policy import HarmPolicy, RURAL_DISTRICT, URBAN_TRAUMA_CENTRE
+from vigil.flow.policy import RURAL_DISTRICT, URBAN_TRAUMA_CENTRE, HarmPolicy
 from vigil.flow.room import EventKind
 from vigil.flow.watch import Observation
 from vigil.triage import PatientSnapshot

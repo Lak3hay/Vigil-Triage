@@ -32,12 +32,17 @@ deterministic layer already decided (README, "What the LLM does not do").
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 
 from vigil.clinical.agebands import AgeBand
 from vigil.clinical.redflags import RedFlag, escalation_floor, evaluate
-from vigil.clinical.scores import MonitoringPlan, ScoreResult, early_warning_score, monitoring_interval
+from vigil.clinical.scores import (
+    MonitoringPlan,
+    ScoreResult,
+    early_warning_score,
+    monitoring_interval,
+)
 from vigil.triage.confidence import Confidence, ConfidenceLevel, assess_confidence
 from vigil.triage.snapshot import PatientSnapshot
 

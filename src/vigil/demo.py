@@ -16,11 +16,19 @@ import sys
 from datetime import timedelta
 
 from vigil.audit import AuditLog, record_assessment, record_override
-from vigil.flow import WaitingRoom, profile
+from vigil.flow import WaitingRoom
 from vigil.flow.policy import RURAL_DISTRICT, URBAN_TRAUMA_CENTRE
 from vigil.flow.room import EventKind
-from vigil.sim import (SCENARIOS, by_id, compare, composition, coverage,
-                       generate_surge, run_shift, surge_summary)
+from vigil.sim import (
+    SCENARIOS,
+    by_id,
+    compare,
+    composition,
+    coverage,
+    generate_surge,
+    run_shift,
+    surge_summary,
+)
 from vigil.sim.scenarios import T0
 from vigil.triage import assess
 from vigil.triage.confidence import ConfidenceLevel
@@ -55,7 +63,7 @@ def show_patients() -> None:
         instr = "PEWS" if "PEWS" in a.score.instrument else "NEWS2"
         mark = " ^" if a.escalated else ("  " if a.nurse_acuity else "  ")
         print(f"  {s.id:<5}{age:<6}{a.age_band.value:<12}{instr:<8}{a.score.total:<7}"
-              f"{str(a.nurse_acuity):<7}{str(a.recommended_level) + mark:<7}"
+              f"{a.nurse_acuity!s:<7}{str(a.recommended_level) + mark:<7}"
               f"{a.confidence.level.value:<10}{len(a.red_flags)}")
     print("\n  ^ = escalated above the nurse's level. The system never lowers one.")
 
@@ -94,7 +102,7 @@ def show_watch() -> None:
     room = WaitingRoom(policy=URBAN_TRAUMA_CENTRE)
     wp = room.admit(s.snapshot, now=T0)
     a = wp.assessment
-    print(f"  P17, 68F, abdominal pain, takes a beta-blocker.")
+    print("  P17, 68F, abdominal pain, takes a beta-blocker.")
     print(f"  T+0   HR {s.snapshot.hr} RR {s.snapshot.rr} SpO2 {s.snapshot.spo2} "
           f"SBP {s.snapshot.sbp}   -> NEWS2 {a.score.total}, level {a.recommended_level}, "
           f"re-check {a.monitoring.interval_minutes} min")
@@ -110,8 +118,8 @@ def show_watch() -> None:
             if e.kind is EventKind.DETERIORATION:
                 print(f"        !! {e.detail}")
                 print(f"           action: {e.action}")
-    print(f"\n  Two readings forty minutes apart are the entire signal.")
-    print(f"  No telemetry, no monitor per chair - a shared kiosk and a re-check clock.")
+    print("\n  Two readings forty minutes apart are the entire signal.")
+    print("  No telemetry, no monitor per chair - a shared kiosk and a re-check clock.")
 
 
 # ── 4. surge ──────────────────────────────────────────────────────────────────
@@ -123,7 +131,7 @@ def show_surge() -> None:
           f"(normal is ~21/hour for a 500-visit department)")
     print(f"  {s['triage_degraded_by_crowding']} arrivals ({s['triage_degraded_pct']}%) had "
           f"their triage level degraded by crowding -")
-    print(f"  the documented effect where a full department under-triages hardest.")
+    print("  the documented effect where a full department under-triages hardest.")
 
     res = run_shift(arrivals, ordering="vigil", minutes_per_patient=4.0, shift_minutes=180)
     kinds: dict[str, int] = {}
@@ -239,7 +247,7 @@ def show_rubric() -> int:
     checks: list[tuple[bool, str, str]] = []
 
     n = len(SCENARIOS)
-    checks.append((n >= 15, f"Triage scoring on at least 15-20 patient records",
+    checks.append((n >= 15, "Triage scoring on at least 15-20 patient records",
                    f"{n} synthetic patients, all scored - see --patients"))
 
     cov = coverage()
@@ -330,18 +338,21 @@ def main(argv: list[str] | None = None) -> int:
         print("  VIGIL - a triage assistant that never stops watching")
         print("  Accenture Innovation Challenge 2026 | PatientTriage.ai | Team Vigil")
         print("=" * W)
-        show_patients(); show_edge_cases(); show_watch()
-        show_surge(); show_experiment(); show_audit(); show_profiles()
+        for section in (show_patients, show_edge_cases, show_watch,
+                        show_surge, show_experiment, show_audit, show_profiles):
+            section()
         return show_rubric()
 
-    if args.rubric:     return show_rubric()
-    if args.patients:   show_patients()
-    if args.cases:      show_edge_cases()
-    if args.watch:      show_watch()
-    if args.surge:      show_surge()
-    if args.experiment: show_experiment()
-    if args.audit:      show_audit()
-    if args.profiles:   show_profiles()
+    if args.rubric:
+        return show_rubric()
+    for flag, section in [
+        ("patients", show_patients), ("cases", show_edge_cases),
+        ("watch", show_watch), ("surge", show_surge),
+        ("experiment", show_experiment), ("audit", show_audit),
+        ("profiles", show_profiles),
+    ]:
+        if getattr(args, flag):
+            section()
     return 0
 
 

@@ -47,10 +47,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Iterator
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 #: Bumped when the hashed representation changes, so old chains stay verifiable
 #: against the rules they were written under.
@@ -159,7 +160,7 @@ class AuditLog:
         return p
 
     @classmethod
-    def read(cls, path: str | Path) -> "AuditLog":
+    def read(cls, path: str | Path) -> AuditLog:
         log = cls()
         for line in Path(path).read_text(encoding="utf-8").splitlines():
             if line.strip():

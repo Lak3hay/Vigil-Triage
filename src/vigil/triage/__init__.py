@@ -3,5 +3,11 @@ from vigil.triage.confidence import Confidence, ConfidenceLevel, assess_confiden
 from vigil.triage.engine import TriageAssessment, assess
 from vigil.triage.snapshot import PatientSnapshot
 
-__all__ = ["PatientSnapshot", "TriageAssessment", "assess",
-           "Confidence", "ConfidenceLevel", "assess_confidence"]
+__all__ = [
+           "Confidence",
+           "ConfidenceLevel",
+           "PatientSnapshot",
+           "TriageAssessment",
+           "assess",
+           "assess_confidence",
+]

@@ -23,8 +23,9 @@ live in one readable file rather than inside model weights.
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from vigil.clinical.agebands import AgeBand, hypotension_sbp_for
 
@@ -53,16 +54,16 @@ class RedFlag:
     escalate_to: int
     rationale: str
     why_missed: str
-    condition: Callable[["PatientSnapshot"], bool]
+    condition: Callable[[PatientSnapshot], bool]
 
-    def fires(self, s: "PatientSnapshot") -> bool:
+    def fires(self, s: PatientSnapshot) -> bool:
         try:
             return bool(self.condition(s))
         except Exception:  # a broken rule must not take the engine down
             return False
 
 
-def _is_elderly(s: "PatientSnapshot") -> bool:
+def _is_elderly(s: PatientSnapshot) -> bool:
     return s.age_band is AgeBand.GERIATRIC
 
 
@@ -263,12 +264,12 @@ PANEL: tuple[RedFlag, ...] = (
 )
 
 
-def _paed_hr_ceiling(s: "PatientSnapshot") -> float:
+def _paed_hr_ceiling(s: PatientSnapshot) -> float:
     from vigil.clinical.agebands import ranges_for
     return float(ranges_for(s.age_band).hr[1])
 
 
-def evaluate(snapshot: "PatientSnapshot") -> tuple[RedFlag, ...]:
+def evaluate(snapshot: PatientSnapshot) -> tuple[RedFlag, ...]:
     """Every rule that fires for this patient, most urgent first."""
     fired = [f for f in PANEL if f.fires(snapshot)]
     return tuple(sorted(fired, key=lambda f: f.escalate_to))

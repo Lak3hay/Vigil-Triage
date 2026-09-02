@@ -137,6 +137,6 @@ class PatientSnapshot:
         t = self.complaint_terms
         return any(term.lower() in t for term in terms)
 
-    def with_vitals(self, **kw) -> "PatientSnapshot":
+    def with_vitals(self, **kw) -> PatientSnapshot:
         """A copy with updated vitals - used by the WATCH loop on re-check."""
         return replace(self, **kw)

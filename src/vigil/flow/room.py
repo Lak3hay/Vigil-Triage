@@ -28,7 +28,7 @@ Design commitments carried through from the engine:
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 
 from vigil.clinical.scores import MonitoringPlan

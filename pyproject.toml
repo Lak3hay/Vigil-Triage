@@ -31,3 +31,8 @@ markers = ["needs_data: requires the demo dataset on disk",
 [tool.ruff]
 line-length = 100
 src = ["src", "tests"]
+
+# Pinned explicitly. Relying on the default set means a ruff release can fail
+# CI on rules we never opted into, which is how this repo shipped 15 red builds.
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B"]

@@ -25,7 +25,7 @@ import random
 from dataclasses import replace
 from datetime import timedelta
 
-from vigil.sim.scenarios import SCENARIOS, Scenario, T0
+from vigil.sim.scenarios import SCENARIOS, T0, Scenario
 
 #: Reference parameters from the brief: EDs of roughly 100 to 500+ visits/day.
 #: 500/day is ~21 arrivals an hour; a 3x surge is ~63.

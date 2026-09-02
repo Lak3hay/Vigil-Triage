@@ -3,6 +3,17 @@ from vigil.flow.policy import PROFILES, HarmPolicy, RoutingDecision, profile, ro
 from vigil.flow.room import EventKind, WaitingPatient, WaitingRoom, WatchEvent
 from vigil.flow.watch import Observation, TrendSignal, detect_trend
 
-__all__ = ["HarmPolicy", "PROFILES", "profile", "route", "RoutingDecision",
-           "WaitingRoom", "WaitingPatient", "WatchEvent", "EventKind",
-           "Observation", "TrendSignal", "detect_trend"]
+__all__ = [
+           "PROFILES",
+           "EventKind",
+           "HarmPolicy",
+           "Observation",
+           "RoutingDecision",
+           "TrendSignal",
+           "WaitingPatient",
+           "WaitingRoom",
+           "WatchEvent",
+           "detect_trend",
+           "profile",
+           "route",
+]

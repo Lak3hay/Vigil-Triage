@@ -26,13 +26,13 @@ is why the assumptions are parameters rather than constants.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from vigil.audit import AuditLog, record_assessment
 from vigil.flow import WaitingRoom
-from vigil.flow.policy import HarmPolicy, URBAN_TRAUMA_CENTRE
+from vigil.flow.policy import URBAN_TRAUMA_CENTRE, HarmPolicy
 from vigil.flow.room import EventKind
-from vigil.sim.scenarios import SCENARIOS, Scenario, T0
+from vigil.sim.scenarios import T0, Scenario
 
 
 @dataclass

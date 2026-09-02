@@ -52,7 +52,7 @@ ones that already exist and that crowding causes departments to miss.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 
 #: Acuity 1 (immediate) - 5 (non-urgent). Lower is more urgent.
 LEVELS = (1, 2, 3, 4, 5)

@@ -66,7 +66,7 @@ class TestRender:
 
     def test_the_embedded_payload_parses(self, tmp_path):
         html = render(tmp_path / "index.html").read_text(encoding="utf-8")
-        d = json.loads(re.search(r"const D = (\{.*?\});\n", html, re.S).group(1))
+        d = json.loads(re.search(r"const D = (\{.*?\});\n", html, re.DOTALL).group(1))
         assert d["frames"] and d["patients"]
 
     def test_it_states_that_the_patients_are_synthetic(self, tmp_path):

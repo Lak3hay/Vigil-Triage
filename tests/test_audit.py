@@ -1,6 +1,7 @@
 """The audit chain must actually detect tampering, not merely claim to."""
 from __future__ import annotations
 
+import itertools
 from datetime import datetime
 
 import pytest
@@ -33,7 +34,7 @@ class TestChainIntegrity:
 
     def test_each_entry_links_to_the_one_before(self):
         log = _log_with()
-        for prev, nxt in zip(log.entries, log.entries[1:]):
+        for prev, nxt in itertools.pairwise(log.entries):
             assert nxt.prev_hash == prev.entry_hash
 
 
