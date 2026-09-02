@@ -59,6 +59,51 @@ CHAIN_VERSION = "vigil-audit/1"
 
 GENESIS = "0" * 64
 
+#: Retention, which the brief names explicitly as a consequence of choosing a
+#: jurisdiction. Two clocks, because these records answer different questions
+#: and a single retention period would be wrong for one of them.
+#:
+#: The clinical record - what was recommended, what a clinician decided, and
+#: why - is part of the patient's episode of care and is retained with it under
+#: the hospital's existing medical-records policy. Vigil does not set that
+#: period and must not shorten it: it is evidence in exactly the disputes an
+#: audit trail exists for.
+#:
+#: The operational record - queue positions, mode changes, alert volumes - is
+#: service-improvement data with no clinical value after the shift it describes.
+#: It is aggregated and the per-patient rows discarded, because keeping personal
+#: data longer than its purpose requires is the thing data minimisation forbids.
+RETENTION = {
+    "clinical_decision_record": "retained with the patient's episode of care, "
+                                "per the hospital's medical-records policy",
+    "operational_telemetry": "aggregated at 90 days; per-patient rows discarded",
+    "disagreement_record": "aggregated at 90 days; never linked to an individual "
+                           "clinician beyond that point",
+}
+
+#: Consent. Under DPDP the lawful basis matters as much as the safeguards.
+#:
+#: Vigil processes data a clinician is already lawfully processing to treat the
+#: patient in front of them - it is a decision-support layer inside an existing
+#: care episode, not a new collection. It asks for nothing the department was
+#: not already recording, which is why the snapshot is scoped to observations a
+#: nurse takes anyway.
+#:
+#: The one genuinely new processing purpose is model improvement, and that is
+#: NOT covered by the treatment basis. It requires either notice-and-consent or
+#: statistical-purpose processing on data that is no longer personal - which is
+#: why the disagreement record aggregates and de-links at 90 days above rather
+#: than accumulating indefinitely "in case it is useful".
+CONSENT_BASIS = {
+    "assessment_and_monitoring": "same lawful basis as the care episode it "
+                                 "supports; no new collection",
+    "model_improvement": "requires notice and consent, or aggregation beyond "
+                         "personal data - not covered by the treatment basis",
+    "patient_rights": "the record is inspectable and contestable by the data "
+                      "principal; an automated recommendation that a person "
+                      "cannot see is not one they can contest",
+}
+
 
 class TamperError(AssertionError):
     """Raised when the chain does not verify."""

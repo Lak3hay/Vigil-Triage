@@ -34,6 +34,7 @@ nurse is already right.** It covers the tail, and it never looks away.
 | **Assess** | Resolves the **age band first**, then scores with the right instrument — NEWS2 for adults, a PEWS-style score over PALS ranges for children. Runs a panel of 12 encoded red flags for presentations too rare to learn. | Recommends |
 | **Watch** | Every waiting patient stays live. Two triggers: an overdue re-check clock, and **worsening re-recorded vitals**. Trends, not thresholds. | Decides the clock |
 | **Sequence** | Ranks the queue by **cost of waiting** — a second axis alongside acuity — and recommends a stream. | Decides order within a band |
+| **Surge** | When the re-check schedule the department *owes* exceeds what it can *deliver*, low-risk intervals and low-acuity targets stretch, the alert floor rises, and sub-threshold events batch to the charge nurse. The sickest keep their cadence exactly; nothing is tightened, because surge does not create clinician-minutes. | Decides the mode, and logs it |
 
 ### The one idea everything else falls out of
 
@@ -115,7 +116,10 @@ Run `python -m vigil.demo --rubric` to have the system verify these **live at ru
 | Age-banded, not one adult model | `--cases` | NEWS2 vs PEWS-style; the infant control must **not** escalate |
 | Escalation bias, demonstrated | `pytest` | 12,487-patient sweep of the safety property |
 | Waiting-queue monitoring, both triggers | `--watch` | Overdue clock **and** worsening re-recorded vitals |
-| Scalability across hospitals | `--profiles` | Two site profiles, no retraining |
+| Scalability across hospitals | `--profiles` | Two site profiles + four capability tiers, no retraining |
+| Surge changes behaviour, not just volume | `--surge` | Re-check demand 46→40/hr; interrupts 187→51; invariants tested |
+| Explainable within seconds | `one_line` | A one-sentence version of every assessment |
+| Integration with existing systems | [`integrations.py`](src/vigil/integrations.py) | Published adapter boundary; T0–T3 capability tiers |
 | Stated regulatory jurisdiction | [`audit/log.py`](src/vigil/audit/log.py) | India — DPDP Act 2023 + ABDM |
 
 ---
@@ -222,6 +226,18 @@ the health-record layer.**
   **not tamper-proof** — a full rewrite still verifies, and [a test asserts exactly
   that](tests/test_audit.py) so the claim in the code matches the claim in this README.
   Tamper-proofing needs an external anchor, which is a deployment decision.
+- **Retention — two clocks, because these records answer different questions.** The clinical
+  decision record is part of the patient's episode of care and is retained with it; Vigil does
+  not set that period and must not shorten it, because it is evidence in exactly the disputes
+  an audit trail exists for. Operational telemetry and the disagreement record aggregate at 90
+  days, with per-patient rows discarded and no link to an individual clinician beyond that.
+- **Consent — the lawful basis, not just the safeguards.** Assessment and monitoring sit on the
+  same basis as the care episode they support: Vigil asks for nothing the department was not
+  already recording, which is why the snapshot is scoped to observations a nurse takes anyway.
+  **Model improvement is a genuinely new purpose and is *not* covered by that basis** — it
+  needs notice and consent, or aggregation past the point of being personal data. The record is
+  inspectable and contestable by the patient; an automated recommendation nobody can see is not
+  one they can contest.
 - **Data minimisation.** The log records the *reasoning*, not the person — a pseudonymous
   reference, the inputs that drove the decision, and the decision. Names and identifiers stay in
   the hospital record system where consent already governs them.
@@ -241,8 +257,14 @@ Stated plainly, because a prototype that hides its edges cannot be evaluated.
   training was cut for scope, and the ED module alone cannot express good outcome labels
   (ICU-within-24h and mortality need the MIMIC-IV hospital modules, which need credentialing).
 - **No LLM layer.** Designed, specified, not built — see above.
-- **No EHR/FHIR integration**, no bed management, no staff rostering. The dataset seam exists
-  (`data/base.py`); the adapters do not.
+- **No integrations are implemented** — but the boundary is published
+  ([`integrations.py`](src/vigil/integrations.py)): the exact question Vigil would ask a
+  patient-record, bed-management or staff-roster system, the answer it needs, and what it does
+  when the answer never comes. An integration team can read it and say "we can supply that in a
+  fortnight" or "we cannot", which is the conversation that decides whether a deployment
+  happens. Vigil runs today at **Tier 0** — nothing integrated — and says so; most of the value
+  arrives at Tier 1, deliberately, because a system whose benefit requires Tier 3 is one almost
+  nobody can deploy.
 - **No clinical validation.** Every number here comes from synthetic patients or a simulation.
   Nothing in this repository is evidence of clinical benefit, and the thresholds are illustrative
   defaults that a real deployment would recalibrate against its own case mix.

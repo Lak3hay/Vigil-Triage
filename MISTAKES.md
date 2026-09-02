@@ -153,3 +153,10 @@ Classes already paid for on other projects and most likely to recur here.
   The event still announced "high-risk intervals tightened" after the tightening was deleted,
   so the demo contradicted itself on screen. -> *User-facing strings are part of the
   behaviour. When the behaviour changes, grep for the words that described it.*
+
+- **2026-09-02 — Claimed a jurisdiction and answered only half of what it obliges.** The brief
+  says naming a jurisdiction *"affects your audit trail design, data retention policy, consent
+  model, and what a clinician override must legally record."* We built the audit trail and the
+  override record well and wrote nothing at all about retention or consent — the two we could
+  not demonstrate in code, and so did not think about. -> *When a requirement lists four things,
+  check off four. The ones with no natural artefact are the ones that get silently dropped.*

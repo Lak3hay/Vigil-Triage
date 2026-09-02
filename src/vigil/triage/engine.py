@@ -120,6 +120,33 @@ class TriageAssessment:
             return f"Escalated to level {self.recommended_level}"
         return f"Consistent with level {self.recommended_level}"
 
+    @property
+    def one_line(self) -> str:
+        """The whole assessment in one sentence a clinician can read in two seconds.
+
+        The brief requires decisions to be "explainable within seconds, by a
+        clinician who is often simultaneously managing several other patients".
+        A paragraph of rationale is not that, however correct it is - it is
+        something to read later. This is the version that has to survive being
+        glanced at over a shoulder, so it names the level, the single strongest
+        reason, and the confidence, and nothing else.
+        """
+        if self.confidence.level is ConfidenceLevel.ABSTAIN:
+            need = self.confidence.next_best_action or "clinician review"
+            return f"Not enough to assess - {need}"
+        if self.red_flags:
+            f = self.red_flags[0]
+            verb = f"Level {self.recommended_level}"
+            if self.escalated:
+                verb = f"Escalate {self.nurse_acuity} -> {self.recommended_level}"
+            return f"{verb}: {f.name.lower()} ({self.confidence.level.value} confidence)"
+        if self.escalated:
+            return (f"Escalate {self.nurse_acuity} -> {self.recommended_level}: "
+                    f"{self.score.instrument} {self.score.total} "
+                    f"({self.confidence.level.value} confidence)")
+        return (f"Level {self.recommended_level} confirmed, {self.score.instrument} "
+                f"{self.score.total}, re-check {self.monitoring.interval_minutes} min")
+
     def to_dict(self) -> dict:
         """Flat, JSON-safe form for the audit log and the board."""
         return {
@@ -154,6 +181,7 @@ class TriageAssessment:
                 {"authority": d.authority, "action": d.action, "detail": d.detail}
                 for d in self.decisions
             ],
+            "one_line": self.one_line,
             "rationale": list(self.rationale),
         }
 
